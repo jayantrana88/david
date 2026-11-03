@@ -1,0 +1,16 @@
+# Async HTTP for every API client (clients/) and the page fetches of the lead sources
+httpx==0.28.1
+python-dotenv==1.2.3
+# HTML parsing of business websites and LinkedIn company pages
+beautifulsoup4==4.15.0
+lxml==6.1.3
+# Real-browser fetch of LinkedIn company pages (clients/browser); after installing: playwright install chromium
+playwright==1.63.0
+# Offline city/region/country matching (services/lead_sourcing/linkedin/geo.py)
+pycountry==26.2.16
+geonamescache==3.0.2
+# AI provider access (clients/llm.py): any model LiteLLM supports, chosen in config.py -> AI
+litellm==1.102.1
+# Resume text extraction (services/profile/extract.py): PDF and DOCX
+pypdf>=5.1
+python-docx>=1.1

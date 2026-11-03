@@ -1,0 +1,221 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* `dark:` follows the `.dark` class next-themes puts on <html>, not the OS setting. */
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-heading: var(--font-inter);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-subtle: var(--subtle);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* status tones: text / soft background / ring (values per theme below) */
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-success-ring: var(--success-ring);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-ring: var(--warning-ring);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-ring: var(--danger-ring);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-info-ring: var(--info-ring);
+  --color-neutral: var(--neutral);
+  --color-neutral-soft: var(--neutral-soft);
+  --color-neutral-ring: var(--neutral-ring);
+  --color-neutral-dot: var(--neutral-dot);
+  --color-brand: var(--brand);
+  --color-brand-2: var(--brand-2);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-ring: var(--brand-ring);
+}
+
+:root {
+  --background: #f7f7fb;
+  --foreground: #101828;
+  --card: #ffffff;
+  --card-foreground: #101828;
+  --popover: #ffffff;
+  --popover-foreground: #101828;
+  --primary: #4f46e5;
+  --primary-foreground: #ffffff;
+  --secondary: #f2f4f7;
+  --secondary-foreground: #344054;
+  --muted: #f2f4f7;
+  --muted-foreground: #667085;
+  --subtle: #f9fafb;
+  --accent: #f4f5f7;
+  --accent-foreground: #101828;
+  --destructive: #d92d20;
+  --border: #eaecf0;
+  --input: #d0d5dd;
+  --ring: #818cf8;
+  --radius: 0.625rem;
+
+  --success: #067647;
+  --success-soft: #ecfdf3;
+  --success-ring: #abefc6;
+  --warning: #b54708;
+  --warning-soft: #fffaeb;
+  --warning-ring: #fedf89;
+  --danger: #b42318;
+  --danger-soft: #fef3f2;
+  --danger-ring: #fecdca;
+  --info: #175cd3;
+  --info-soft: #eff8ff;
+  --info-ring: #b2ddff;
+  --neutral: #475467;
+  --neutral-soft: #f2f4f7;
+  --neutral-ring: #e4e7ec;
+  --neutral-dot: #98a2b3;
+  --brand: #4f46e5;
+  --brand-2: #7c3aed;
+  --brand-soft: #eef2ff;
+  --brand-ring: #c7d2fe;
+
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.03);
+  --shadow-card-hover: 0 12px 28px -12px rgba(79, 70, 229, 0.22), 0 2px 6px rgba(16, 24, 40, 0.05);
+  --glow: rgba(99, 102, 241, 0.1);
+  --glow-2: rgba(139, 92, 246, 0.07);
+  color-scheme: light;
+}
+
+.dark {
+  --background: #0b0d14;
+  --foreground: #e7e9f0;
+  --card: #12151f;
+  --card-foreground: #e7e9f0;
+  --popover: #161a26;
+  --popover-foreground: #e7e9f0;
+  --primary: #6366f1;
+  --primary-foreground: #ffffff;
+  --secondary: #1a1e2b;
+  --secondary-foreground: #c3c8d6;
+  --muted: #1a1e2b;
+  --muted-foreground: #8b93a7;
+  --subtle: #151925;
+  --accent: #1c2130;
+  --accent-foreground: #e7e9f0;
+  --destructive: #f05252;
+  --border: #232838;
+  --input: #2c3244;
+  --ring: #6366f1;
+
+  --success: #4ade80;
+  --success-soft: rgba(74, 222, 128, 0.1);
+  --success-ring: rgba(74, 222, 128, 0.25);
+  --warning: #fbbf24;
+  --warning-soft: rgba(251, 191, 36, 0.1);
+  --warning-ring: rgba(251, 191, 36, 0.25);
+  --danger: #f87171;
+  --danger-soft: rgba(248, 113, 113, 0.1);
+  --danger-ring: rgba(248, 113, 113, 0.25);
+  --info: #60a5fa;
+  --info-soft: rgba(96, 165, 250, 0.1);
+  --info-ring: rgba(96, 165, 250, 0.25);
+  --neutral: #a3abbd;
+  --neutral-soft: rgba(163, 171, 189, 0.1);
+  --neutral-ring: rgba(163, 171, 189, 0.2);
+  --neutral-dot: #6b7385;
+  --brand: #a5b4fc;
+  --brand-2: #a78bfa;
+  --brand-soft: rgba(129, 140, 248, 0.14);
+  --brand-ring: rgba(129, 140, 248, 0.3);
+
+  --shadow-card: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  --shadow-card-hover: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 12px 32px -12px rgba(99, 102, 241, 0.35);
+  --glow: rgba(99, 102, 241, 0.12);
+  --glow-2: rgba(139, 92, 246, 0.08);
+  color-scheme: dark;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "cv11", "ss01";
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@utility shadow-card {
+  box-shadow: var(--shadow-card);
+}
+
+@utility shadow-card-hover {
+  box-shadow: var(--shadow-card-hover);
+}
+
+/* A soft brand glow behind the top of the content column. */
+@utility app-glow {
+  position: relative;
+  isolation: isolate;
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 420px;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(600px 260px at 15% -40px, var(--glow), transparent 70%),
+      radial-gradient(520px 240px at 85% -60px, var(--glow-2), transparent 70%);
+  }
+}
+
+/* Form controls (native elements, so they post with Server Actions as-is). */
+@layer components {
+  .input {
+    @apply h-10 w-full rounded-lg border border-input bg-card px-3 text-sm text-foreground shadow-card transition-shadow outline-none placeholder:text-muted-foreground/70 focus:border-ring focus:ring-3 focus:ring-ring/25 disabled:bg-muted disabled:text-muted-foreground aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/15;
+  }
+  textarea.input {
+    @apply h-auto min-h-24 py-2.5 leading-relaxed;
+  }
+  select.input {
+    @apply appearance-none pr-9;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23667085' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-size: 16px;
+    background-position: right 0.75rem center;
+    background-repeat: no-repeat;
+  }
+  .dark select.input {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%238b93a7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  }
+}

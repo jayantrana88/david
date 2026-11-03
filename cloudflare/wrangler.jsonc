@@ -1,0 +1,26 @@
+// The job applier on Cloudflare (free plan). One Worker:
+//   fetch      the dashboard (password: the DASHBOARD_PASSWORD secret)
+//   scheduled  every minute: one "tick" that runs one stage a small step (src/runner.ts)
+// The Deploy to Cloudflare button provisions the D1 database and Workers AI, and runs `npm run deploy`, which
+// applies migrations/ to D1 before deploying.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "job-applier",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  "triggers": { "crons": ["* * * * *"] },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "job-applier",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "ai": { "binding": "AI" },
+  // Browser Rendering (free: 10 browser-minutes a day): reads LinkedIn company pages like a real browser.
+  // Settings → Sourcing → "LinkedIn pages through" can switch to plain fetch instead.
+  "browser": { "binding": "BROWSER" }
+}
