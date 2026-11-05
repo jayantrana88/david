@@ -39,7 +39,7 @@ Thumbs.db
 # the Cloudflare Worker's D1 schema (the Deploy button applies it)
 !cloudflare/migrations/*.sql
 *.db
-# the local database (data/job_applier.db + its WAL files) and the uploaded resumes (data/resumes/)
+# the local database (data/david.db + its WAL files) and the uploaded resumes (data/resumes/)
 data/
 
 

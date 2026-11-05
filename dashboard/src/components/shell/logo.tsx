@@ -50,7 +50,7 @@ export function Logo() {
     <div className="flex items-center gap-2.5">
       <LogoMark />
       <div className="leading-tight">
-        <p className="text-[15px] font-semibold tracking-tight text-foreground">Job Applier</p>
+        <p className="text-[15px] font-semibold tracking-tight text-foreground">DAVID</p>
         <p className="text-[11px] text-muted-foreground">Applications on autopilot</p>
       </div>
     </div>

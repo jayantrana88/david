@@ -7,11 +7,11 @@ The same pipeline as the local daemon, as one Cloudflare Worker you can deploy w
 | Piece | Local daemon | This Worker |
 |---|---|---|
 | Runtime | `python main.py`, one asyncio process | A cron trigger every minute; each tick runs one stage a small step |
-| Database | `data/job_applier.db` (SQLite) | D1 (SQLite), same tables (`migrations/0001_init.sql`) |
+| Database | `data/david.db` (SQLite) | D1 (SQLite), same tables (`migrations/0001_init.sql`) |
 | Resume | `data/resumes/` | Stored in D1 as base64 (up to 1.4 MB) |
 | Resume to text | pypdf / python-docx | Workers AI `toMarkdown` (free for PDF and DOCX) |
 | AI | LiteLLM, any provider | Workers AI binding (no key, Gemma 4 by default), or any OpenAI-compatible endpoint |
-| LinkedIn pages | Playwright + your Chrome | Browser Rendering, or plain fetch |
+| LinkedIn pages | Playwright + your Chrome | Plain fetch (Browser Rendering on Workers Paid) |
 | City gazetteer | geonamescache (bundled) | Open-Meteo geocoding (same GeoNames data), cached in D1 |
 | Dashboard | Next.js on `127.0.0.1` | Server-rendered pages from the same Worker, behind a password |
 | Gmail / Outlook sign-in | `python mail_setup.py connect` | Settings → Connect (web OAuth) |
@@ -29,7 +29,7 @@ The same pipeline as the local daemon, as one Cloudflare Worker you can deploy w
 6. **Tasks:** add a kind of company and a place, for example *software company* in *Bengaluru*.
 7. **Applications:** watch the drafts arrive. When they look right, go to Settings and switch the mode to **Send** with your delivery channel.
 
-To deploy from your own machine instead: `npm install`, `npx wrangler login`, then `npx wrangler d1 create job-applier` and put its id in `wrangler.jsonc`. Then run `npx wrangler secret put DASHBOARD_PASSWORD` and `npm run deploy`.
+To deploy from your own machine instead: `npm install`, `npx wrangler login`, then `npx wrangler d1 create david` and put its id in `wrangler.jsonc`. Then run `npx wrangler secret put DASHBOARD_PASSWORD` and `npm run deploy`.
 
 ### Delivery channels
 
@@ -70,15 +70,14 @@ What the daemon keeps in memory, the Worker keeps in D1, because it forgets ever
 ### Daily allowances (free plan)
 
 - **Workers AI:** 10,000 neurons a day. When they're used up, the AI stages hold until midnight UTC; the Overview shows why. To go further, set an OpenAI-compatible provider in Settings → AI (a base URL, a model and an AI key; Groq and OpenRouter have free tiers).
-- **Browser Rendering:** 10 browser-minutes a day, roughly 100 to 150 LinkedIn pages. When they're used up, sourcing holds until midnight UTC.
 - **D1:** 5 GB, 5 million rows read and 100,000 written a day. That's far more than this uses.
 - **Workers:** 100,000 requests a day. The cron uses 1,440.
 
 ### Known limits
 
-- **LinkedIn blocks more on Cloudflare.** It refuses many requests from datacenter IPs. A refused page holds sourcing for 20 minutes and is retried once; three refusals in a row fail the task with the reason, the same as the daemon's run abort. Re-run it later, or switch Settings → Sourcing → *LinkedIn pages through*.
+- **LinkedIn blocks more on Cloudflare.** It refuses many requests from datacenter IPs. A refused page holds sourcing for 20 minutes and is retried once; three refusals in a row fail the task with the reason, the same as the daemon's run abort. Re-run it later, or run the local daemon, which uses your own Chrome and connection.
 - **The website check is coarser.** A Worker can't tell a missing domain from a refused connection or a bad certificate, so all three count as unreachable.
-- **The Deploy button doesn't list Browser Rendering among the resources it provisions.** The binding needs no resource of its own, so `wrangler deploy` sets it up. If your account doesn't have Browser Rendering, use *Plain fetch*.
+- **No browser on the free plan.** Browser Rendering is Workers Paid only (the deploy screen refuses it on free), so LinkedIn pages are read by plain fetch. On a paid plan, add `"browser": { "binding": "BROWSER" }` to `wrangler.jsonc`, redeploy, and pick *Browser Rendering* in Settings → Sourcing.
 - **Keys are stored as plain text in your D1 database.** The dashboard password is their only protection, the same as the local dashboard's.
 
 ## Develop

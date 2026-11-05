@@ -38,7 +38,7 @@ const ROUTES: [method: string, pattern: RegExp, handler: Handler][] = [
 ];
 
 function loginPage(error = "", status = 200): Response {
-  return bare("Sign in", html`<h1>Job applier</h1>
+  return bare("Sign in", html`<h1>DAVID</h1>
 ${error ? html`<div class="flash bad">${error}</div>` : ""}
 <form method="post" action="/login" class="panel"><label>Dashboard password</label>
 <input name="password" type="password" autocomplete="current-password" required autofocus>

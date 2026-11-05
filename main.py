@@ -68,7 +68,7 @@ POOLS = {
 GRACE_SECS = 30.0  # how long in-flight leads may finish after a shutdown signal
 SETTINGS_POLL_SECS = 5.0   # how often a live daemon checks whether the dashboard saved new settings
 RESTART_EXIT_CODE = 75     # "settings changed, start me again": the supervisor (below) relaunches on it
-CHILD_ENV = "JOB_APPLIER_CHILD"   # set for the daemon process the supervisor launches
+CHILD_ENV = "DAVID_CHILD"   # set for the daemon process the supervisor launches
 
 
 def _install_signal_handlers(shutdown: asyncio.Event) -> None:
@@ -186,7 +186,7 @@ def _supervise() -> int:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Job applier daemon: profile; sourcing tasks -> scrape -> internal -> email.")
+    parser = argparse.ArgumentParser(description="DAVID daemon: profile; sourcing tasks -> scrape -> internal -> email.")
     parser.add_argument("--pools", nargs="+", choices=POOLS, default=list(POOLS), metavar="POOL",
                         help=f"run only these pool(s): {', '.join(POOLS)} (default: all)")
     args = parser.parse_args()

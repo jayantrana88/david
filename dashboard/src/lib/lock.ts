@@ -7,7 +7,7 @@ import { get, run } from "@/lib/db";
  * signs every browser out, and nothing but the hash is stored.
  */
 
-export const LOCK_COOKIE = "job_applier_unlock";
+export const LOCK_COOKIE = "david_unlock";
 export const LOCK_COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
 export const MIN_PASSWORD_LENGTH = 6;
 
@@ -20,7 +20,7 @@ export function lockHash(): string | null {
 }
 
 export function sessionToken(hash: string): string {
-  return createHmac("sha256", hash).update("job-applier-session").digest("hex");
+  return createHmac("sha256", hash).update("david-session").digest("hex");
 }
 
 /** True when there is no lock, or the cookie is the current session token. */

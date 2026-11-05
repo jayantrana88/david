@@ -1,9 +1,9 @@
 """
-Job applier settings: the file to edit for what the dashboard doesn't cover.
+DAVID settings: the file to edit for what the dashboard doesn't cover.
 
   Dashboard     the API keys, the AI model, the email settings: the Settings page writes them to the local
                 SQLite database (app_settings / app_secrets, core/app_settings.py), which is read once, here.
-                The database is the file DB_PATH (default data/job_applier.db, core/sqlite.py).
+                The database is the file DB_PATH (default data/david.db, core/sqlite.py).
   RATE_LIMITS   each provider's ceiling (concurrent requests, requests per minute)
   LOGGING       how much each log gets, and whether logs/main/main.log is echoed to the terminal
   AI            which AI model qualifies the leads and writes the emails (any LiteLLM provider)

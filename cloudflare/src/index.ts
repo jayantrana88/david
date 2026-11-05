@@ -1,11 +1,11 @@
 /**
- * The job applier as one Cloudflare Worker (free plan):
+ * DAVID as one Cloudflare Worker (free plan):
  *
  *   fetch       the dashboard (src/web/), behind the DASHBOARD_PASSWORD secret
  *   scheduled   the cron trigger, every minute: one tick that runs one stage a small step (src/runner.ts)
  *
  * Storage is one D1 database (migrations/), the AI is Workers AI through the `AI` binding, and LinkedIn pages
- * are read through Browser Rendering (`BROWSER`). See README.md.
+ * are read by plain fetch, or through Browser Rendering (`BROWSER`) on a paid plan. See README.md.
  */
 import { tick } from "./runner";
 import { handle } from "./web/router";

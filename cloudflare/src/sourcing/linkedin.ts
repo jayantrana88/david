@@ -196,6 +196,7 @@ async function viaFetch(url: string): Promise<[string, string, string]> {
 }
 
 async function viaBrowser(env: Env, url: string): Promise<[string, string, string]> {
+  if (!env.BROWSER) throw new Error("the BROWSER binding isn't set up (Workers Paid only); choose plain fetch in Settings → Sourcing");
   const resp = await env.BROWSER.quickAction("content", {
     url,
     userAgent: browserHeaders()["User-Agent"],

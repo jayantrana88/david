@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 /**
- * The local SQLite database the daemon shares (default ../data/job_applier.db, `DB_PATH` overrides it;
+ * The local SQLite database the daemon shares (default ../data/david.db, `DB_PATH` overrides it;
  * a relative path is relative to the repo root). Uses Node's built-in `node:sqlite`, loaded through
  * `process.getBuiltinModule` so the bundler never has to resolve it. The schema (../db/schema.sql) is
  * applied on first open, the same as the daemon does, so either side may create the file.
@@ -24,7 +24,7 @@ interface Database {
 const REPO_ROOT = path.resolve(process.cwd(), "..");
 
 export function dbPath(): string {
-  const p = process.env.DB_PATH || "data/job_applier.db";
+  const p = process.env.DB_PATH || "data/david.db";
   return path.isAbsolute(p) ? p : path.join(/*turbopackIgnore: true*/ REPO_ROOT, p);
 }
 

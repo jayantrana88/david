@@ -1,8 +1,8 @@
 {
-  "name": "job-applier",
+  "name": "david",
   "version": "0.1.0",
   "private": true,
-  "description": "The job applier on Cloudflare's free tier: one Worker (dashboard + a cron tick that runs the stages), D1, Workers AI.",
+  "description": "DAVID on Cloudflare's free tier: one Worker (dashboard + a cron tick that runs the stages), D1, Workers AI.",
   "type": "module",
   "scripts": {
     "dev": "wrangler dev --test-scheduled",

@@ -1,4 +1,4 @@
--- schema.sql — every table the job applier needs, in the local SQLite database (data/job_applier.db).
+-- schema.sql — every table DAVID needs, in the local SQLite database (data/david.db).
 -- Applied automatically, by the daemon (core/sqlite.py) and the dashboard (dashboard/src/lib/db.ts),
 -- each time they open the file: every statement is IF NOT EXISTS / OR IGNORE, so it is safe to re-run.
 -- CREATE TABLE IF NOT EXISTS never changes a table that already exists: a column added or removed later is

@@ -1,4 +1,4 @@
--- The job applier's D1 database. The same tables as the local SQLite file (../db/schema.sql), plus what a
+-- DAVID's D1 database. The same tables as the local SQLite file (../db/schema.sql), plus what a
 -- Worker needs because it keeps nothing in memory between ticks (marked "Worker only"):
 --   tasks.cursor          a running task's progress, so a search goes on where the last tick stopped
 --   websites.url_key      the normalized website URL, for dedupe (the daemon keeps that set in memory)

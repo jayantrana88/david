@@ -68,8 +68,8 @@ details summary{cursor:pointer}.pager{margin-top:12px}.filters{margin-bottom:12p
 export function layout(title: string, path: string, body: Html, flash?: { ok: boolean; msg: string } | null): Response {
   const nav = NAV.map(([href, label]) => html`<a href="${href}" class="${(href === "/" ? path === "/" : path.startsWith(href)) ? "on" : ""}">${label}</a>`);
   const page = html`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${title} · Job applier</title><style>${raw(CSS)}</style></head><body>
-<header><div class="top"><span class="brand">Job applier</span><nav class="row">${nav}</nav>
+<title>${title} · DAVID</title><style>${raw(CSS)}</style></head><body>
+<header><div class="top"><span class="brand">DAVID</span><nav class="row">${nav}</nav>
 <form method="post" action="/logout" class="inline" style="margin-left:auto"><button>Sign out</button></form></div></header>
 <main>${flash ? html`<div class="flash ${flash.ok ? "ok" : "bad"}">${flash.msg}</div>` : ""}<h1>${title}</h1>${body}</main></body></html>`;
   return new Response(page.value, { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", "X-Frame-Options": "DENY", "Referrer-Policy": "same-origin" } });

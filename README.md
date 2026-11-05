@@ -105,7 +105,7 @@ tasks ──▶ sourcing ──▶ websites ──▶ scrape ──▶ website_s
 | **Internal** | Reads up to 5 internal pages of each company that fits. | Jina Reader |
 | **Email** | Writes the application from those pages and your profile, checks it against the rules, and saves or delivers it. | AI, then Telegram, Gmail or Outlook |
 
-Everything is stored in one SQLite file, `data/job_applier.db`, which is created on first start. The table and code names are older than the name DAVID: a company is a "lead" in a `websites` row, and an application is a `cold_emails` row.
+Everything is stored in one SQLite file, `data/david.db`, which is created on first start. The table and code names are older than the name DAVID: a company is a "lead" in a `websites` row, and an application is a `cold_emails` row.
 
 <details>
 <summary>What happens when something fails</summary>
@@ -146,7 +146,7 @@ apis/                   one module per outside service: Jina (+ parsing its repl
 prompts/                every AI prompt, the JSON schema of its reply and the parser of that reply
 stages/                 profile/ sourcing/ (+ linkedin/) scrape/ internal/ email/
 db/schema.sql           every table, applied automatically whenever the database is opened
-data/                   job_applier.db and resumes/ (uploaded resumes); git-ignored
+data/                   david.db and resumes/ (uploaded resumes); git-ignored
 dashboard/              Next.js web UI over the same SQLite file
 cloudflare/             the same pipeline as one Cloudflare Worker (see cloudflare/README.md)
 tests/                  pytest suite (no network: a fake AI and a fake Jina)
@@ -173,7 +173,7 @@ There are two ways to run DAVID. Both use the same stages and the same tables.
 | **Setup** | Click **Deploy to Cloudflare** | Python, Node and a few commands |
 | **Runs** | Around the clock, with no PC to keep on | While `python main.py` is running |
 | **AI** | Workers AI, with no key needed | Any provider [LiteLLM](https://docs.litellm.ai/docs/providers) supports |
-| **LinkedIn pages** | Browser Rendering (LinkedIn blocks datacenter IPs more often) | Your installed Chrome, from your own connection |
+| **LinkedIn pages** | Plain fetch from Cloudflare (LinkedIn blocks datacenter IPs often; Browser Rendering needs Workers Paid) | Your installed Chrome, from your own connection |
 | **Dashboard** | On a public URL, behind a password | On `127.0.0.1`, with an optional password |
 
 ### On Cloudflare
@@ -238,9 +238,9 @@ python main.py --pools scrape internal  # only some (profile sourcing scrape int
 > A stage whose key is missing doesn't start, and the others still run. `logs/main/main.log` names any stage that didn't start and why.
 
 > [!IMPORTANT]
-> The keys are stored as plain text in `data/job_applier.db`. Keep that file, and any backup of it, private.
+> The keys are stored as plain text in `data/david.db`. Keep that file, and any backup of it, private.
 
-The only environment variable is the optional `DB_PATH`, the location of the SQLite file (default `data/job_applier.db`). The daemon and the dashboard both read it; for the dashboard, put it in `dashboard/.env.local`. There is no database setup step: [db/schema.sql](db/schema.sql) is applied whenever the file is opened.
+The only environment variable is the optional `DB_PATH`, the location of the SQLite file (default `data/david.db`). The daemon and the dashboard both read it; for the dashboard, put it in `dashboard/.env.local`. There is no database setup step: [db/schema.sql](db/schema.sql) is applied whenever the file is opened.
 
 ### Tasks
 

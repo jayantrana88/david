@@ -77,7 +77,7 @@ export function configFrom(s: Record<string, unknown>, k: Record<string, unknown
       senderName: str(s.sender_name),
     },
     sourcing: {
-      transport: s.linkedin_transport === "fetch" ? "fetch" : "browser",
+      transport: s.linkedin_transport === "browser" ? "browser" : "fetch",
       perTick: int(s.sourcing_per_tick, 4, 1, 10),
     },
     keys: {

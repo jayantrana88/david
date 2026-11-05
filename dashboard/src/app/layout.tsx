@@ -7,7 +7,7 @@ import "./globals.css";
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: { default: "Job Applier", template: "%s · Job Applier" },
+  title: { default: "DAVID", template: "%s · DAVID" },
   description: "Job and internship applications, from search to sent",
 };
 

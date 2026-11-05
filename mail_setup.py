@@ -45,7 +45,7 @@ SIGN_IN_TIMEOUT = 300       # seconds to finish signing in in the browser
 
 SAMPLE_BODY = """Hi Acme team,
 
-This is a test application from the job applier, sent to check that {channel} delivery works. The daemon
+This is a test application from DAVID, sent to check that {channel} delivery works. The daemon
 sends each application exactly like this one, with the resume attached when there is one.
 
 Nothing else will be sent by this test.
@@ -165,7 +165,7 @@ async def send_test(channel: str, to: str, resume: Path | None) -> int:
     try:
         mailer = get_mailer(channel)
         attachments = [Attachment(resume.name, resume.read_bytes())] if resume else None
-        name = "The job applier"
+        name = "DAVID"
         status, detail = await mailer.send(to, f"Test application ({channel})",
                                            SAMPLE_BODY.format(channel=channel, name=name), attachments,
                                            from_name=name)

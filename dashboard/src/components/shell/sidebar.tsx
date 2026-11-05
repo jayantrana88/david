@@ -156,7 +156,7 @@ export function MobileNav() {
       <div className="flex items-center justify-between px-4 pt-3 pb-1">
         <Link href="/" className="flex items-center gap-2">
           <LogoMark size={28} />
-          <span className="text-[15px] font-semibold tracking-tight">Job Applier</span>
+          <span className="text-[15px] font-semibold tracking-tight">DAVID</span>
         </Link>
         <ThemeToggleButton />
       </div>

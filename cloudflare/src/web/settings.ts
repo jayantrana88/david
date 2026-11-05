@@ -71,7 +71,7 @@ ${value ? html`<button name="clear" value="1" class="danger">Clear</button>` : "
 <textarea name="email_instructions" maxlength="2000">${v("email_instructions")}</textarea></div>
 
 <h2>Sourcing</h2><div class="panel cols">
-<div><label>LinkedIn pages through</label><select name="linkedin_transport">${opt("browser", cfg.sourcing.transport, "Browser Rendering (free: 10 browser-minutes a day)")}${opt("fetch", cfg.sourcing.transport, "Plain fetch (often refused by LinkedIn)")}</select></div>
+<div><label>LinkedIn pages through</label><select name="linkedin_transport">${opt("fetch", cfg.sourcing.transport, "Plain fetch (often refused by LinkedIn)")}${opt("browser", cfg.sourcing.transport, "Browser Rendering (Workers Paid only; needs the BROWSER binding)")}</select></div>
 <div><label>LinkedIn pages per tick (1–10)</label><input name="sourcing_per_tick" type="number" min="1" max="10" value="${cfg.sourcing.perTick}"></div>
 <div><label>Outlook tenant</label><input name="outlook_tenant" value="${v("outlook_tenant")}" placeholder="common" maxlength="100"></div>
 <div><label><input type="checkbox" name="paused" ${cfg.paused ? raw("checked") : ""}> Pause (the scheduled ticks do nothing)</label></div></div>
@@ -112,7 +112,7 @@ export async function saveSettings(req: Req): Promise<Response> {
     email_enabled: form.get("email_enabled") === "on",
     email_attach_resume: form.get("email_attach_resume") === "on",
     email_instructions: formText(form, "email_instructions", 2000) || null,
-    linkedin_transport: formText(form, "linkedin_transport") === "fetch" ? "fetch" : "browser",
+    linkedin_transport: formText(form, "linkedin_transport") === "browser" ? "browser" : "fetch",
     sourcing_per_tick: num("sourcing_per_tick", 1, 10),
     outlook_tenant: formText(form, "outlook_tenant", 100) || null,
     paused: form.get("paused") === "on",
@@ -158,11 +158,11 @@ export async function testSend(req: Req): Promise<Response> {
   cfg.email.delivery = channel as typeof cfg.email.delivery;
   const profile = await loadProfile(req.db);
   const resume = profile ? await loadResume(req.db, profile) : null;
-  const name = profile?.full_name || cfg.email.senderName || "The job applier";
+  const name = profile?.full_name || cfg.email.senderName || "DAVID";
   try {
     const mailer = await makeMailer(req.db, cfg);
     const [status, detail] = await mailer.send(to, `Test application (${channel})`,
-      `Hi Acme team,\n\nThis is a test application from the job applier, sent to check that ${channel} delivery works. Each application goes out exactly like this one, with the resume attached when there is one.\n\nNothing else will be sent by this test.\n\nBest regards,\n${name}`,
+      `Hi Acme team,\n\nThis is a test application from DAVID, sent to check that ${channel} delivery works. Each application goes out exactly like this one, with the resume attached when there is one.\n\nNothing else will be sent by this test.\n\nBest regards,\n${name}`,
       resume ? [resume] : null, name);
     return redirect("/settings", `${channel}: ${status}${detail ? ` (${detail.slice(0, 200)})` : ""}`, status === "sent");
   } catch (e) {
