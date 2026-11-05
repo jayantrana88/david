@@ -82,7 +82,7 @@ export async function handle(request: Request, env: Env, ctx: ExecutionContext):
         console.error(e);
         const message = e instanceof Error ? e.message : String(e);
         if (/no such table/i.test(message)) {
-          return bare("Database not set up", html`<h1>Database not set up</h1><div class="panel">The D1 tables are missing. Run <code>npm run db:migrations:apply</code> (the Deploy button's deploy command does it).</div>`, 500);
+          return bare("Database not set up", html`<h1>Database not set up</h1><div class="panel">The D1 tables could not be created. The Worker applies its migrations itself on the first request; check the Worker's logs for \"migration failed\".</div>`, 500);
         }
         return method === "GET"
           ? bare("Error", html`<h1>Something went wrong</h1><div class="panel"><pre>${message}</pre><a href="/">Back</a></div>`, 500)

@@ -1,6 +1,6 @@
 # DAVID on Cloudflare (free plan)
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/jayantrana88/david/tree/main/cloudflare)
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/jayantrana88/david-cloudflare)
 
 The same pipeline as the local daemon, as one Cloudflare Worker you can deploy with the button above. There is nothing to install and no PC to keep on. It finds small companies on LinkedIn, checks each one plausibly has work for you, and writes each an application with your resume attached. In dry run it saves drafts; in send mode it posts each application to your Telegram chat, or emails it from your Gmail or Outlook account.
 
@@ -18,18 +18,18 @@ The same pipeline as the local daemon, as one Cloudflare Worker you can deploy w
 
 ## Deploy
 
-1. **Push this repo to GitHub as a public repo.** The button reads `https://github.com/jayantrana88/david/tree/main/cloudflare`. If your repo or branch is named differently, change that URL here and in the root README.
+1. **Push this repo to GitHub as a public repo.** The button reads `https://github.com/jayantrana88/david-cloudflare`. If your repo or branch is named differently, change that URL here and in the root README.
 2. **Click Deploy to Cloudflare** and sign in. You'll name the Worker and the D1 database, and set **`DASHBOARD_PASSWORD`**: the dashboard is on a public URL, so use at least 10 random characters (`openssl rand -base64 18`). Cloudflare then:
    - copies the repo to your account,
    - creates the D1 database,
-   - runs `npm run deploy`, which applies `migrations/` to D1 and deploys the Worker with its cron.
+   - deploys the Worker with its cron. The Worker creates its own tables in D1 on its first run (`src/migrations.ts`), so the deploy command doesn't matter.
 3. **Open the Worker's URL and sign in.**
 4. **Profile:** upload your resume (PDF or DOCX). The profile stage reads it within a minute or two.
 5. **Settings → API keys:** add your [Serper](https://serper.dev) key. It's required: LinkedIn is searched through Google, and Serper gives 2,500 free searches. A Jina key is optional.
 6. **Tasks:** add a kind of company and a place, for example *software company* in *Bengaluru*.
 7. **Applications:** watch the drafts arrive. When they look right, go to Settings and switch the mode to **Send** with your delivery channel.
 
-To deploy from your own machine instead: `npm install`, `npx wrangler login`, then `npx wrangler d1 create david` and put its id in `wrangler.jsonc`. Then run `npx wrangler secret put DASHBOARD_PASSWORD` and `npm run deploy`.
+To deploy from your own machine instead: `npm install`, `npx wrangler login`, then `npx wrangler d1 create david` and put its id in `wrangler.jsonc`. Then run `npx wrangler secret put DASHBOARD_PASSWORD` and `npm run deploy`. (The migrations apply on the Worker's first request; `npm run db:migrations:apply` still works if you prefer to run them yourself.)
 
 ### Delivery channels
 

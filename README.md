@@ -9,7 +9,7 @@
 DAVID finds small companies in the field and place you choose and checks that each one plausibly has work for you.<br>
 Then it writes each of them a short, personal application with your resume attached.
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/jayantrana88/david/tree/main/cloudflare)
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/jayantrana88/david-cloudflare)
 
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-3776ab?logo=python&logoColor=white)
 ![Runs on Cloudflare Workers](https://img.shields.io/badge/also%20runs%20on-Cloudflare%20Workers-f38020?logo=cloudflare&logoColor=white)

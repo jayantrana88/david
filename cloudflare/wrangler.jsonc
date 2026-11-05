@@ -1,8 +1,8 @@
 // DAVID on Cloudflare (free plan). One Worker:
 //   fetch      the dashboard (password: the DASHBOARD_PASSWORD secret)
 //   scheduled  every minute: one "tick" that runs one stage a small step (src/runner.ts)
-// The Deploy to Cloudflare button provisions the D1 database and Workers AI, and runs `npm run deploy`, which
-// applies migrations/ to D1 before deploying.
+// The Deploy to Cloudflare button provisions the D1 database (no database_id here: it is created and filled in for
+// you) and Workers AI. The Worker applies migrations/ to D1 itself, so any deploy command works.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "david",
@@ -15,11 +15,12 @@
     {
       "binding": "DB",
       "database_name": "david",
-      "database_id": "00000000-0000-0000-0000-000000000000",
       "migrations_dir": "migrations"
     }
   ],
-  "ai": { "binding": "AI" }
+  "ai": { "binding": "AI" },
+  // The migration files are bundled into the Worker as text (src/migrations.ts applies them on first run).
+  "rules": [{ "type": "Text", "globs": ["**/*.sql"], "fallthrough": true }]
   // Browser Rendering is NOT bound here: Cloudflare's deploy screen refuses it on the free plan ("only available on
   // Workers Paid"). On a paid plan, add  "browser": { "binding": "BROWSER" }  and pick it in Settings → Sourcing.
 }
