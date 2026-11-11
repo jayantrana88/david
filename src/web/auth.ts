@@ -1,6 +1,6 @@
 /**
  * The dashboard is on a public URL, so it is always locked: the password is the DASHBOARD_PASSWORD secret
- * (asked for by the Deploy to Cloudflare button). Without it every page says how to set it (fail closed).
+ * (set after the deploy, not asked for by the button). Without it every page says how to set it (fail closed).
  * A session is a cookie `<expiry>.<HMAC(password, expiry)>`: changing the password signs everyone out.
  * POSTs must come from the dashboard's own origin (CSRF), on top of the SameSite=Lax cookie.
  */

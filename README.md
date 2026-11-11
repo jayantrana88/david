@@ -180,7 +180,7 @@ There are two ways to run DAVID. Both use the same stages and the same tables.
 
 ### On Cloudflare
 
-**1. Click Deploy to Cloudflare** at the top of this page, then sign in. Set **`DASHBOARD_PASSWORD`** when asked; at least 10 random characters is a good choice.
+**1. Click Deploy to Cloudflare** at the top of this page, then sign in. The deploy doesn't ask for a password. Until you set the **`DASHBOARD_PASSWORD`** secret (Worker → Settings → Variables and Secrets, at least 10 random characters), the dashboard stays locked and shows a page telling you how.
 
 **2. Open the Worker's URL**, then upload your resume on **Profile** and add your [Serper](https://serper.dev) key in **Settings → API keys**.
 

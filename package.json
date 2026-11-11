@@ -19,9 +19,6 @@
   },
   "cloudflare": {
     "bindings": {
-      "DASHBOARD_PASSWORD": {
-        "description": "The password for the dashboard (it is on a public URL). At least 10 characters; generate one with `openssl rand -base64 18`."
-      },
       "DB": {
         "description": "The D1 database that holds everything: tasks, companies, applications, your profile and resume, settings."
       }

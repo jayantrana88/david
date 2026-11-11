@@ -19,7 +19,7 @@ The same pipeline as the local daemon, as one Cloudflare Worker you can deploy w
 ## Deploy
 
 1. **Push this repo to GitHub as a public repo.** The button reads `https://github.com/jayantrana88/david`, and the Worker sits at the repo root (`wrangler.jsonc`, `package.json`, `src/`). If your repo is named differently, change that URL here and in the root README.
-2. **Click Deploy to Cloudflare** and sign in. You'll name the Worker and the D1 database, and set **`DASHBOARD_PASSWORD`**: the dashboard is on a public URL, so use at least 10 random characters (`openssl rand -base64 18`). Cloudflare then:
+2. **Click Deploy to Cloudflare** and sign in. You'll name the Worker and the D1 database. The deploy doesn't ask for a password: until you set the **`DASHBOARD_PASSWORD`** secret (Worker → Settings → Variables and Secrets, at least 10 random characters, e.g. `openssl rand -base64 18`), the dashboard stays locked and says how to set it. Cloudflare then:
    - copies the repo to your account,
    - creates the D1 database,
    - deploys the Worker with its cron. The Worker creates its own tables in D1 on its first run (`src/migrations.ts`), so the deploy command doesn't matter.
