@@ -1,7 +1,7 @@
 """Gmail API client: sends each application from the candidate's own Gmail account, resume attached.
 
-Auth is OAuth 2.0 with the `gmail.send` scope: a Google Cloud "Desktop app" OAuth client (GMAIL_CLIENT_ID /
-GMAIL_CLIENT_SECRET in credentials.env) and a refresh token saved once by `python mail_setup.py connect gmail`.
+Auth is OAuth 2.0 with the `gmail.send` scope: a Google Cloud "Desktop app" OAuth client (the Gmail client ID /
+secret on the dashboard's Settings page) and a refresh token saved once by `python mail_setup.py connect gmail`.
 The message goes up as raw MIME through the upload endpoint (up to 35 MB), so it is exactly what was built.
 
     status, detail = await get_gmail().send("jane@acme.com", "Subject", "Body", [Attachment("cv.pdf", data)])

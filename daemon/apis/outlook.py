@@ -2,8 +2,8 @@
 account, resume attached.
 
 Auth is OAuth 2.0 (delegated `Mail.Send`): an app registered in Microsoft Entra with the "Mobile and desktop
-applications" platform and the redirect URI http://localhost (OUTLOOK_CLIENT_ID in credentials.env;
-OUTLOOK_CLIENT_SECRET only for a "Web" registration; OUTLOOK_TENANT, default "common"), and a refresh token
+applications" platform and the redirect URI http://localhost (the Outlook client ID on the dashboard's Settings page;
+the client secret only for a "Web" registration), and a refresh token
 saved once by `python mail_setup.py connect outlook`. Microsoft rotates the refresh token on every refresh;
 the new one is saved back to the token file.
 

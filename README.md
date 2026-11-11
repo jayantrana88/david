@@ -9,7 +9,7 @@
 DAVID finds small companies in the field and place you choose and checks that each one plausibly has work for you.<br>
 Then it writes each of them a short, personal application with your resume attached.
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/jayantrana88/david-cloudflare)
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/jayantrana88/david)
 
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-3776ab?logo=python&logoColor=white)
 ![Runs on Cloudflare Workers](https://img.shields.io/badge/also%20runs%20on-Cloudflare%20Workers-f38020?logo=cloudflare&logoColor=white)
@@ -105,12 +105,12 @@ tasks ──▶ sourcing ──▶ websites ──▶ scrape ──▶ website_s
 | **Internal** | Reads up to 5 internal pages of each company that fits. | Jina Reader |
 | **Email** | Writes the application from those pages and your profile, checks it against the rules, and saves or delivers it. | AI, then Telegram, Gmail or Outlook |
 
-Everything is stored in one SQLite file, `data/david.db`, which is created on first start. The table and code names are older than the name DAVID: a company is a "lead" in a `websites` row, and an application is a `cold_emails` row.
+Everything is stored in one SQLite file, `daemon/data/david.db`, which is created on first start. The table and code names are older than the name DAVID: a company is a "lead" in a `websites` row, and an application is a `cold_emails` row.
 
 <details>
 <summary>What happens when something fails</summary>
 
-All five stages share one loop, `Worker` in [core/worker.py](core/worker.py). It loads the queue, drops what is finished or waiting to retry, runs a batch and records each item's outcome:
+All five stages share one loop, `Worker` in [daemon/core/worker.py](daemon/core/worker.py). It loads the queue, drops what is finished or waiting to retry, runs a batch and records each item's outcome:
 
 | Outcome | What DAVID does |
 | --- | --- |
@@ -136,24 +136,26 @@ The internal stage works the same way: if none of a company's pages can be read,
 <summary>Project layout</summary>
 
 ```
-main.py                 entry point: starts one worker per stage, shuts down gracefully
-config.py               the settings file: credentials, rate limits, logging, AI providers, email mode
-core/                   shared plumbing: the Worker loop, the database (db.py, sqlite.py), the AI client and
-                        batching (llm.py), rate limits, logging, retries, the HTTP pool, the client getters
-                        (clients.py), the config models and the dashboard-settings loader
-apis/                   one module per outside service: Jina (+ parsing its replies), Serper, Telegram,
-                        Gmail, Outlook (+ mail.py, what they share), the headless browser, the website check
-prompts/                every AI prompt, the JSON schema of its reply and the parser of that reply
-stages/                 profile/ sourcing/ (+ linkedin/) scrape/ internal/ email/
-db/schema.sql           every table, applied automatically whenever the database is opened
-data/                   david.db and resumes/ (uploaded resumes); git-ignored
+daemon/                 the local Python daemon
+  main.py                 entry point: starts one worker per stage, shuts down gracefully
+  config.py               the settings file: credentials, rate limits, logging, AI providers, email mode
+  core/                   shared plumbing: the Worker loop, the database (db.py, sqlite.py), the AI client and
+                          batching (llm.py), rate limits, logging, retries, the HTTP pool, the client getters
+                          (clients.py), the config models and the dashboard-settings loader
+  apis/                   one module per outside service: Jina (+ parsing its replies), Serper, Telegram,
+                          Gmail, Outlook (+ mail.py, what they share), the headless browser, the website check
+  prompts/                every AI prompt, the JSON schema of its reply and the parser of that reply
+  stages/                 profile/ sourcing/ (+ linkedin/) scrape/ internal/ email/
+  db/schema.sql           every table, applied automatically whenever the database is opened
+  data/                   david.db and resumes/ (uploaded resumes); git-ignored
+  tests/                  pytest suite (no network: a fake AI and a fake Jina)
+  test_email.py           manual harness: one company, real APIs, nothing saved or sent
 dashboard/              Next.js web UI over the same SQLite file
-cloudflare/             the same pipeline as one Cloudflare Worker (see cloudflare/README.md)
-tests/                  pytest suite (no network: a fake AI and a fake Jina)
-test_email.py           manual harness: one company, real APIs, nothing saved or sent
+src/ migrations/ test/  the same pipeline as one Cloudflare Worker (wrangler.jsonc, package.json at the
+wrangler.jsonc ...      repo root; see docs/cloudflare.md)
 ```
 
-Each stage has the same files in `stages/<stage>/`:
+Each stage has the same files in `daemon/stages/<stage>/`:
 
 | File | What it holds |
 | --- | --- |
@@ -171,7 +173,7 @@ There are two ways to run DAVID. Both use the same stages and the same tables.
 | | On Cloudflare (free plan) | On your own machine |
 | --- | --- | --- |
 | **Setup** | Click **Deploy to Cloudflare** | Python, Node and a few commands |
-| **Runs** | Around the clock, with no PC to keep on | While `python main.py` is running |
+| **Runs** | Around the clock, with no PC to keep on | While `python daemon/main.py` is running |
 | **AI** | Workers AI, with no key needed | Any provider [LiteLLM](https://docs.litellm.ai/docs/providers) supports |
 | **LinkedIn pages** | Plain fetch from Cloudflare (LinkedIn blocks datacenter IPs often; Browser Rendering needs Workers Paid) | Your installed Chrome, from your own connection |
 | **Dashboard** | On a public URL, behind a password | On `127.0.0.1`, with an optional password |
@@ -184,7 +186,7 @@ There are two ways to run DAVID. Both use the same stages and the same tables.
 
 **3. Add a task** on **Tasks**, and watch the drafts arrive.
 
-[cloudflare/README.md](cloudflare/README.md) covers the details: the delivery channels, the free-tier budget, and how the Worker differs from the local daemon.
+[docs/cloudflare.md](docs/cloudflare.md) covers the details: the delivery channels, the free-tier budget, and how the Worker differs from the local daemon.
 
 ### On your own machine
 
@@ -192,7 +194,7 @@ There are two ways to run DAVID. Both use the same stages and the same tables.
 
 - Python 3.10 or newer
 - Node 22.5 or newer, for the dashboard (it uses the built-in `node:sqlite`)
-- Google Chrome, which fetches the LinkedIn pages. Without it, run `playwright install chromium` and set `Settings.browser_channel=None` in [stages/sourcing/linkedin/settings.py](stages/sourcing/linkedin/settings.py)
+- Google Chrome, which fetches the LinkedIn pages. Without it, run `playwright install chromium` and set `Settings.browser_channel=None` in [daemon/stages/sourcing/linkedin/settings.py](daemon/stages/sourcing/linkedin/settings.py)
 
 #### Steps
 
@@ -201,7 +203,7 @@ There are two ways to run DAVID. Both use the same stages and the same tables.
 ```powershell
 python -m venv venv
 venv\Scripts\activate
-pip install -r requirements.txt
+pip install -r daemon/requirements.txt
 ```
 
 **2. Start the dashboard**
@@ -220,27 +222,27 @@ npm run dev            # http://127.0.0.1:3000   (or: npm run build && npm start
 | Jina Reader key | scrape, internal | [jina.ai/reader](https://jina.ai/reader) |
 | Serper key | sourcing | [serper.dev](https://serper.dev), 2,500 free searches |
 | Telegram bot token + chat ID | Telegram delivery | Create a bot with @BotFather, message it once, and read the chat ID from `getUpdates` |
-| Gmail client ID + secret | Gmail delivery | A Google Cloud OAuth client of type "Desktop app" with the Gmail API enabled. Then run `python mail_setup.py connect gmail` |
-| Outlook client ID (+ secret for a "Web" registration) | Outlook delivery | A Microsoft Entra app registration. Then run `python mail_setup.py connect outlook` |
+| Gmail client ID + secret | Gmail delivery | A Google Cloud OAuth client of type "Desktop app" with the Gmail API enabled. Then run `python daemon/mail_setup.py connect gmail` |
+| Outlook client ID (+ secret for a "Web" registration) | Outlook delivery | A Microsoft Entra app registration. Then run `python daemon/mail_setup.py connect outlook` |
 
 **4. Upload your resume** on **Profile**. Once the daemon is running (step 5), the profile stage reads it within about 15 seconds. Check the result and edit anything it got wrong.
 
 **5. Start the daemon**
 
 ```powershell
-python main.py                          # every stage
-python main.py --pools scrape internal  # only some (profile sourcing scrape internal email)
+python daemon/main.py                          # every stage
+python daemon/main.py --pools scrape internal  # only some (profile sourcing scrape internal email)
 ```
 
 **6. Add a task** on **Tasks**: a kind of company, a place, and how many companies to find.
 
 > [!TIP]
-> A stage whose key is missing doesn't start, and the others still run. `logs/main/main.log` names any stage that didn't start and why.
+> A stage whose key is missing doesn't start, and the others still run. `daemon/logs/main/main.log` names any stage that didn't start and why.
 
 > [!IMPORTANT]
-> The keys are stored as plain text in `data/david.db`. Keep that file, and any backup of it, private.
+> The keys are stored as plain text in `daemon/data/david.db`. Keep that file, and any backup of it, private.
 
-The only environment variable is the optional `DB_PATH`, the location of the SQLite file (default `data/david.db`). The daemon and the dashboard both read it; for the dashboard, put it in `dashboard/.env.local`. There is no database setup step: [db/schema.sql](db/schema.sql) is applied whenever the file is opened.
+The only environment variable is the optional `DB_PATH`, the location of the SQLite file (default `daemon/data/david.db`). The daemon and the dashboard both read it; for the dashboard, put it in `dashboard/.env.local`. There is no database setup step: [daemon/db/schema.sql](daemon/db/schema.sql) is applied whenever the file is opened.
 
 ### Tasks
 
@@ -276,7 +278,7 @@ Every database call runs on the server, and API keys never reach the browser. Th
 
 ## Sending applications
 
-DAVID starts in **dry run**: every application is saved as a `draft` on the **Cold emails** page, and nothing is sent. When the drafts look right, set `mode="send"` in `config.py` → `EMAIL`, and choose a channel in **Settings → Email → Delivery**. Going live deletes the drafts, so those companies get a real application. (On Cloudflare, the mode is a setting on the dashboard.)
+DAVID starts in **dry run**: every application is saved as a `draft` on the **Cold emails** page, and nothing is sent. When the drafts look right, set `mode="send"` in `daemon/config.py` → `EMAIL`, and choose a channel in **Settings → Email → Delivery**. Going live deletes the drafts, so those companies get a real application. (On Cloudflare, the mode is a setting on the dashboard.)
 
 | Channel | What happens |
 | --- | --- |
@@ -287,7 +289,7 @@ DAVID starts in **dry run**: every application is saved as a `draft` on the **Co
 Before going live, send yourself one sample through the channel:
 
 ```powershell
-python mail_setup.py test gmail --to you@example.com --resume cv.pdf
+python daemon/mail_setup.py test gmail --to you@example.com --resume cv.pdf
 ```
 
 > [!NOTE]
@@ -295,7 +297,7 @@ python mail_setup.py test gmail --to you@example.com --resume cv.pdf
 
 ## Configuration
 
-Keys, the AI model, the delivery channel, the daily send cap and your writing rules are set on the dashboard. The rest, including the email mode, is in [config.py](config.py), plain Python that is checked when the daemon starts; an unknown field or a bad value stops it with the field's name.
+Keys, the AI model, the delivery channel, the daily send cap and your writing rules are set on the dashboard. The rest, including the email mode, is in [daemon/config.py](daemon/config.py), plain Python that is checked when the daemon starts; an unknown field or a bad value stops it with the field's name.
 
 <details>
 <summary>AI providers</summary>
@@ -314,7 +316,7 @@ To switch provider, change a role's `models` (any [LiteLLM model string](https:/
 <details>
 <summary>Rate limits</summary>
 
-Each outside API has one limit for the whole daemon, in `config.py` → `RATE_LIMITS`:
+Each outside API has one limit for the whole daemon, in `daemon/config.py` → `RATE_LIMITS`:
 
 | API | In flight | Per minute |
 | --- | --- | --- |
@@ -330,7 +332,7 @@ Each outside API has one limit for the whole daemon, in `config.py` → `RATE_LI
 <details>
 <summary>Logs and shutdown</summary>
 
-- **Logs** are in `logs/`. `logs/main/main.log` records stages starting and pausing, queue sizes and task summaries, and is also printed to the console. `logs/<stage>/<stage>.log` has one line per company. Files rotate at midnight and are kept for 7 days. Set levels in `config.py` → `LOGGING`, or use `$env:LOG_LEVEL="DEBUG"` for one run (DEBUG also shows each AI call's token usage).
+- **Logs** are in `daemon/logs/`. `daemon/logs/main/main.log` records stages starting and pausing, queue sizes and task summaries, and is also printed to the console. `daemon/logs/<stage>/<stage>.log` has one line per company. Files rotate at midnight and are kept for 7 days. Set levels in `daemon/config.py` → `LOGGING`, or use `$env:LOG_LEVEL="DEBUG"` for one run (DEBUG also shows each AI call's token usage).
 - **Shutdown:** Ctrl+C stops the stages from taking new work, and in-flight work gets 30 seconds to finish. Anything still running is picked up again at the next start.
 - **Settings changes:** when you save a setting on the dashboard, the daemon finishes its current work and restarts itself with the new settings.
 
@@ -350,21 +352,21 @@ DAVID is provided as is. You are responsible for how you use it and for every em
 
 ## Updating
 
-Pull the new code, then run `pip install -r requirements.txt`, and `npm install` in `dashboard/`. Restart the daemon. New columns are added to your existing database automatically when it is opened, so your data stays.
+Pull the new code, then run `pip install -r daemon/requirements.txt`, and `npm install` in `dashboard/`. Restart the daemon. New columns are added to your existing database automatically when it is opened, so your data stays.
 
-For the Cloudflare version, see [cloudflare/README.md](cloudflare/README.md). `npm run deploy` applies any new migrations to D1.
+For the Cloudflare version, see [docs/cloudflare.md](docs/cloudflare.md). `npm run deploy` applies any new migrations to D1.
 
 ## Troubleshooting
 
 | Problem | What to do |
 | --- | --- |
-| A stage never does anything | Its key is probably missing. `logs/main/main.log` names the stages that didn't start |
+| A stage never does anything | Its key is probably missing. `daemon/logs/main/main.log` names the stages that didn't start |
 | Scrape and email stay empty | The profile isn't ready. Check **Profile**: upload a resume, or fix the error shown there |
 | A task failed with an unrecognised location | Use a city, region or country name as it appears on a map, for example *Bengaluru* or *Karnataka* |
 | A task failed because LinkedIn blocked it | Wait a while, then re-run the task. Companies already saved are skipped |
 | No applications are being sent | `EMAIL.mode` is still `dry_run`, the daily cap has been reached, or no resume has been uploaded (the email stage waits for one) |
 | The AI stages pause for hours | Every model is out of its daily quota. Add a second model or provider |
-| Gmail stopped sending after a week | The Google app is still in "Testing". Publish it, or run `python mail_setup.py connect gmail` again |
+| Gmail stopped sending after a week | The Google app is still in "Testing". Publish it, or run `python daemon/mail_setup.py connect gmail` again |
 | An application shows "check Sent folder" | Gmail or Outlook timed out after the email may have gone out. Check your Sent folder. DAVID won't send to that company again |
 
 ## Known limits
@@ -381,21 +383,21 @@ For the Cloudflare version, see [cloudflare/README.md](cloudflare/README.md). `n
 DAVID is in beta. The Python and Cloudflare test suites pass offline with a fake AI and fake services, but use against the live services (LinkedIn, the AI providers, Gmail and Outlook) has been limited so far.
 
 - Start in dry run, and read the drafts before you send anything.
-- Try the delivery channel on yourself first with `python mail_setup.py test`.
-- If something breaks, open an issue with the relevant lines from `logs/`.
+- Try the delivery channel on yourself first with `python daemon/mail_setup.py test`.
+- If something breaks, open an issue with the relevant lines from `daemon/logs/`.
 
 ## Contributing
 
-Bug reports, fixes and new lead sources are welcome. A new source is a package under `stages/sourcing/`; [CLAUDE.md](CLAUDE.md) describes the contract.
+Bug reports, fixes and new lead sources are welcome. A new source is a package under `daemon/stages/sourcing/`; [CLAUDE.md](CLAUDE.md) describes the contract.
 
 1. Fork the repo and make your change.
-2. If you change the prompts, the email rules or a queue, change the Cloudflare port in `cloudflare/src/` to match.
+2. If you change the prompts, the email rules or a queue, change the Cloudflare port in `src/` to match.
 3. Run the tests before you open a pull request:
 
 ```powershell
-pip install -r requirements-dev.txt
-python -m pytest                     # no network, no keys: a fake AI, a fake Jina, temporary databases
-cd cloudflare; npm test; npm run typecheck
+pip install -r daemon/requirements-dev.txt
+python -m pytest daemon                     # no network, no keys: a fake AI, a fake Jina, temporary databases
+npm test; npm run typecheck
 ```
 
 ### Development setup
@@ -403,5 +405,5 @@ cd cloudflare; npm test; npm run typecheck
 The tests cover the email rules, reading the AI's replies, the Worker's outcomes, each stage's queue query, the config checks, and a scrape and an email round against a fake AI. To try one company end to end against the real APIs without saving or sending anything:
 
 ```powershell
-python test_email.py https://acme.com --resume my_cv.pdf [--notes "..."] [--role "Data Analyst"] [--type internship]
+python daemon/test_email.py https://acme.com --resume my_cv.pdf [--notes "..."] [--role "Data Analyst"] [--type internship]
 ```

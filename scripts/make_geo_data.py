@@ -1,7 +1,7 @@
 """Regenerate src/sourcing/geo-data.ts from pycountry (the countries and subdivisions the Python gazetteer,
 stages/sourcing/linkedin/geo.py, indexes). Run with the daemon's venv from the repo root:
 
-    venv/Scripts/python cloudflare/scripts/make_geo_data.py
+    venv/Scripts/python scripts/make_geo_data.py
 
 Cities are not bundled: the Worker looks them up through Open-Meteo's geocoding API (GeoNames data, the same
 source as geonamescache) and caches each answer in D1.
@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pycountry
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "daemon"))
 from stages.sourcing.linkedin.geo import EUROPE, NORTH_AMERICA  # noqa: E402
 
 

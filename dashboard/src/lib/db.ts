@@ -3,9 +3,9 @@ import fs from "node:fs";
 import path from "node:path";
 
 /**
- * The local SQLite database the daemon shares (default ../data/david.db, `DB_PATH` overrides it;
- * a relative path is relative to the repo root). Uses Node's built-in `node:sqlite`, loaded through
- * `process.getBuiltinModule` so the bundler never has to resolve it. The schema (../db/schema.sql) is
+ * The local SQLite database the daemon shares (default daemon/data/david.db, `DB_PATH` overrides it;
+ * a relative path is relative to the daemon folder). Uses Node's built-in `node:sqlite`, loaded through
+ * `process.getBuiltinModule` so the bundler never has to resolve it. The schema (daemon/db/schema.sql) is
  * applied on first open, the same as the daemon does, so either side may create the file.
  */
 
@@ -22,10 +22,12 @@ interface Database {
 }
 
 const REPO_ROOT = path.resolve(process.cwd(), "..");
+/** The daemon's folder: its database (data/), schema (db/) and logs live inside it. */
+const DAEMON_ROOT = path.join(/*turbopackIgnore: true*/ REPO_ROOT, "daemon");
 
 export function dbPath(): string {
   const p = process.env.DB_PATH || "data/david.db";
-  return path.isAbsolute(p) ? p : path.join(/*turbopackIgnore: true*/ REPO_ROOT, p);
+  return path.isAbsolute(p) ? p : path.join(/*turbopackIgnore: true*/ DAEMON_ROOT, p);
 }
 
 /** Where the uploaded resume files live: a `resumes` folder next to the database file. */
@@ -45,7 +47,7 @@ function open(): Database {
   fs.mkdirSync(path.dirname(file), { recursive: true });
   const conn = new DatabaseSync(file);
   conn.exec("PRAGMA busy_timeout = 10000; PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;");
-  conn.exec(fs.readFileSync(path.join(/*turbopackIgnore: true*/ REPO_ROOT, "db", "schema.sql"), "utf8"));
+  conn.exec(fs.readFileSync(path.join(/*turbopackIgnore: true*/ DAEMON_ROOT, "db", "schema.sql"), "utf8"));
   return conn;
 }
 

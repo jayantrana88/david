@@ -1,6 +1,6 @@
 """The local SQLite database: where it is, how a connection is opened, how values go in and out.
 
-One file, `data/david.db` by default (`DB_PATH` in the environment, relative to the project root),
+One file, `data/david.db` by default (`DB_PATH` in the environment, relative to the daemon folder),
 shared by the daemon and the dashboard. Resume files live next to it in `data/resumes/`. Every connection
 applies `db/schema.sql` (idempotent) when it opens, so a fresh checkout needs no setup step.
 
@@ -34,7 +34,7 @@ Params = Mapping[str, Any] | Iterable[Any]
 
 
 def db_path() -> Path:
-    """The database file: `DB_PATH` (absolute, or relative to the project root), else data/david.db.
+    """The database file: `DB_PATH` (absolute, or relative to the daemon folder), else data/david.db.
     Read from the environment at each call, so it works whether or not config.py has been imported."""
     path = Path(os.getenv("DB_PATH") or DEFAULT_DB_PATH)
     return path if path.is_absolute() else PROJECT_ROOT / path

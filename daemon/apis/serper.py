@@ -31,7 +31,7 @@ class SerperClient:
     def __init__(self, http: HttpClient, api_key: str = credentials.serper_api_key, *,
                  attempts: int = 4, timeout_secs: float = 30.0) -> None:
         if not api_key:
-            raise RuntimeError("SerperClient: SERPER_API_KEY is not set in credentials.env "
+            raise RuntimeError("SerperClient: the Serper API key is not set on the dashboard's Settings page "
                                "(get one at https://serper.dev)")
         self.api_key = api_key
         self._http = http

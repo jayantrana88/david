@@ -10,7 +10,7 @@ DAVID settings: the file to edit for what the dashboard doesn't cover.
   EMAIL         whether the email pool runs, whether it really sends, and through what (Telegram or a mailbox)
 
 Every value is checked when this file is imported, so a typo stops the daemon before anything
-starts, with a message saying what to fix. There is no credentials.env: the only environment variable the
+starts, with a message saying what to fix. The only environment variable the
 daemon reads is DB_PATH (optional), because it has to find the database before it can read anything.
 """
 from dataclasses import dataclass

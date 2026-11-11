@@ -1,24 +1,24 @@
 # DAVID on Cloudflare (free plan)
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/jayantrana88/david-cloudflare)
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/jayantrana88/david)
 
 The same pipeline as the local daemon, as one Cloudflare Worker you can deploy with the button above. There is nothing to install and no PC to keep on. It finds small companies on LinkedIn, checks each one plausibly has work for you, and writes each an application with your resume attached. In dry run it saves drafts; in send mode it posts each application to your Telegram chat, or emails it from your Gmail or Outlook account.
 
 | Piece | Local daemon | This Worker |
 |---|---|---|
-| Runtime | `python main.py`, one asyncio process | A cron trigger every minute; each tick runs one stage a small step |
-| Database | `data/david.db` (SQLite) | D1 (SQLite), same tables (`migrations/0001_init.sql`) |
-| Resume | `data/resumes/` | Stored in D1 as base64 (up to 1.4 MB) |
+| Runtime | `python daemon/main.py`, one asyncio process | A cron trigger every minute; each tick runs one stage a small step |
+| Database | `daemon/data/david.db` (SQLite) | D1 (SQLite), same tables (`migrations/0001_init.sql`) |
+| Resume | `daemon/data/resumes/` | Stored in D1 as base64 (up to 1.4 MB) |
 | Resume to text | pypdf / python-docx | Workers AI `toMarkdown` (free for PDF and DOCX) |
 | AI | LiteLLM, any provider | Workers AI binding (no key, Gemma 4 by default), or any OpenAI-compatible endpoint |
 | LinkedIn pages | Playwright + your Chrome | Plain fetch (Browser Rendering on Workers Paid) |
 | City gazetteer | geonamescache (bundled) | Open-Meteo geocoding (same GeoNames data), cached in D1 |
 | Dashboard | Next.js on `127.0.0.1` | Server-rendered pages from the same Worker, behind a password |
-| Gmail / Outlook sign-in | `python mail_setup.py connect` | Settings → Connect (web OAuth) |
+| Gmail / Outlook sign-in | `python daemon/mail_setup.py connect` | Settings → Connect (web OAuth) |
 
 ## Deploy
 
-1. **Push this repo to GitHub as a public repo.** The button reads `https://github.com/jayantrana88/david-cloudflare`. If your repo or branch is named differently, change that URL here and in the root README.
+1. **Push this repo to GitHub as a public repo.** The button reads `https://github.com/jayantrana88/david`, and the Worker sits at the repo root (`wrangler.jsonc`, `package.json`, `src/`). If your repo is named differently, change that URL here and in the root README.
 2. **Click Deploy to Cloudflare** and sign in. You'll name the Worker and the D1 database, and set **`DASHBOARD_PASSWORD`**: the dashboard is on a public URL, so use at least 10 random characters (`openssl rand -base64 18`). Cloudflare then:
    - copies the repo to your account,
    - creates the D1 database,
@@ -94,7 +94,7 @@ npm run dev                   # http://localhost:8787; trigger a tick at /__sche
 The AI binding runs only against your account (`wrangler dev --remote`). Locally the AI stages hold with "needs to be run remotely".
 
 `src/` mirrors the daemon:
-- `stages/<stage>.ts` holds each stage; `runner.ts` is `main.py` plus `core/worker.py`.
+- `daemon/stages/<stage>.ts` holds each stage; `runner.ts` is `daemon/main.py` plus `daemon/core/worker.py`.
 - `prompts.ts`, `llm.ts`, `jina.ts`, `mail/`, `sourcing/` (geo and LinkedIn) and `web/` (the dashboard) hold the rest.
 
-Keep the prompts in `prompts.ts` in step with `../prompts/templates.py`. `src/sourcing/geo-data.ts` is generated from pycountry by `scripts/make_geo_data.py`.
+Keep the prompts in `prompts.ts` in step with `../daemon/prompts/templates.py`. `src/sourcing/geo-data.ts` is generated from pycountry by `scripts/make_geo_data.py`.

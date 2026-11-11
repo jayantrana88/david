@@ -1,5 +1,4 @@
 # --- Secrets (never commit) ---
-credentials.env
 .env
 .env.*
 !.env.example
@@ -35,9 +34,9 @@ logs/
 .DS_Store
 Thumbs.db
 *.sql
-!db/schema.sql
+!daemon/db/schema.sql
 # the Cloudflare Worker's D1 schema (the Deploy button applies it)
-!cloudflare/migrations/*.sql
+!migrations/*.sql
 *.db
 # the local database (data/david.db + its WAL files) and the uploaded resumes (data/resumes/)
 data/
@@ -86,3 +85,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .next
+# Cloudflare Worker
+.wrangler/
+dist/
+.dev.vars
