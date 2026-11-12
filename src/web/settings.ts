@@ -10,7 +10,7 @@ import { GMAIL, OUTLOOK, oauthClient, type Provider } from "../mail/oauth";
 import { configFrom, DEFAULT_AI_MODEL, loadConfig } from "../settings";
 import { loadProfile, loadResume } from "../candidate";
 import { base64url, base64urlDecode, parseJson, randomToken } from "../util";
-import { cookieValue, sign, unsign } from "./auth";
+import { cookieValue, envPassword, hashPassword, lockKey, MIN_PASSWORD, passwordMatches, sessionCookie, sign, signingKey, unsign } from "./auth";
 import { flashOf, formText, type Req, redirect } from "./common";
 import { action, html, layout, raw, when } from "./html";
 
@@ -52,7 +52,22 @@ ${value ? html`<button name="clear" value="1" class="danger">Clear</button>` : "
 <div class="row"><a class="btn" href="/oauth/${provider}/start">${t ? "Connect again" : "Connect"}</a>${t ? action(`/oauth/${provider}/disconnect`, "Disconnect", { cls: "danger" }) : ""}</div></div>`;
   };
 
+  const locked = (await lockKey(req.env, req.db)) !== null;
+  const fromSecret = envPassword(req.env) !== null;
+  const passwordPanel = fromSecret
+    ? html`<div class="panel"><span class="badge b-ok">locked</span> The password comes from the <code>DASHBOARD_PASSWORD</code> secret. Change it under Workers &amp; Pages → this Worker → Settings → Variables and Secrets.</div>`
+    : html`<div class="panel">${locked ? html`<span class="badge b-ok">locked</span>` : html`<span class="badge b-warn">open</span> <b>Anyone who has this address can open the dashboard</b>, including your API keys and resume. Set a password if the address could get out.`}
+<form method="post" action="/settings/password" class="cols" style="margin-top:8px">
+${locked ? html`<div><label>Current password</label><input name="current" type="password" autocomplete="current-password" required></div>` : ""}
+<div><label>${locked ? "New password" : "Password"} (at least ${MIN_PASSWORD} characters)</label><input name="password" type="password" autocomplete="new-password" minlength="${MIN_PASSWORD}" required></div>
+<div><label>Repeat it</label><input name="confirm" type="password" autocomplete="new-password" minlength="${MIN_PASSWORD}" required></div>
+<div><button class="primary">${locked ? "Change password" : "Set password"}</button></div></form>
+${locked ? html`<form method="post" action="/settings/password/remove" class="row" style="margin-top:8px" onsubmit="return confirm('Remove the password? Anyone with the address can then open the dashboard.')">
+<input name="current" type="password" autocomplete="current-password" required placeholder="current password" style="max-width:260px"><button class="danger">Remove password</button></form>` : ""}</div>`;
+
   const body = html`
+<h2 id="password">Dashboard password</h2>
+${passwordPanel}
 <form method="post" action="/settings">
 <h2>AI</h2><div class="panel cols">
 <div><label>Model (empty = Workers AI's ${DEFAULT_AI_MODEL})</label><input name="ai_model" value="${v("ai_model")}" maxlength="200" placeholder="${DEFAULT_AI_MODEL}"></div>
@@ -78,7 +93,7 @@ ${value ? html`<button name="clear" value="1" class="danger">Clear</button>` : "
 <p><button class="primary">Save settings</button></p></form>
 
 <h2 id="keys">API keys</h2>
-<p class="muted small">Stored in your D1 database as plain text, behind the dashboard password.</p>
+<p class="muted small">Stored in your D1 database as plain text. Set a dashboard password above if the address could get out.</p>
 ${keyRows}
 
 <h2>Mailboxes (delivery gmail / outlook)</h2>
@@ -149,6 +164,38 @@ export async function saveSecret(req: Req): Promise<Response> {
   return redirect("/settings#keys", clear ? "Key cleared." : "Key saved; it is used from the next tick.");
 }
 
+const text = (form: FormData, key: string): string => String(form.get(key) ?? "");
+
+/** Sets or changes the dashboard password (a salted hash in D1). Changing it signs every browser out but this one. */
+export async function savePassword(req: Req): Promise<Response> {
+  if (envPassword(req.env)) return redirect("/settings", "The password is set by the DASHBOARD_PASSWORD secret; change it in Cloudflare.", false);
+  const form = await req.request.formData();
+  const password = text(form, "password");
+  if (password.length < MIN_PASSWORD) return redirect("/settings", `Use at least ${MIN_PASSWORD} characters.`, false);
+  if (password !== text(form, "confirm")) return redirect("/settings", "The two passwords don't match.", false);
+  if ((await lockKey(req.env, req.db)) !== null && !(await passwordMatches(req.env, req.db, text(form, "current")))) {
+    return redirect("/settings", "The current password is wrong.", false);
+  }
+  const hash = await hashPassword(password);
+  await req.db.run(
+    "INSERT INTO dashboard_lock (id, password_hash) VALUES (1, ?) ON CONFLICT(id) DO UPDATE SET password_hash = excluded.password_hash, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')",
+    [hash],
+  );
+  const res = redirect("/settings", "Password saved.");
+  res.headers.append("Set-Cookie", await sessionCookie(`db:${hash}`));
+  return res;
+}
+
+/** Removes the password: the dashboard is open again. */
+export async function removePassword(req: Req): Promise<Response> {
+  if (envPassword(req.env)) return redirect("/settings", "The password is set by the DASHBOARD_PASSWORD secret; remove it in Cloudflare.", false);
+  if (!(await passwordMatches(req.env, req.db, text(await req.request.formData(), "current")))) {
+    return redirect("/settings", "The current password is wrong.", false);
+  }
+  await req.db.run("DELETE FROM dashboard_lock WHERE id = 1");
+  return redirect("/settings", "Password removed; the dashboard is open.");
+}
+
 export async function testSend(req: Req): Promise<Response> {
   const form = await req.request.formData();
   const channel = formText(form, "channel");
@@ -201,7 +248,7 @@ export async function oauthStart(req: Req, provider: Provider): Promise<Response
     params.set("prompt", "select_account");
     authUrl = OUTLOOK.loginUrl(cfg.keys.outlookTenant, "authorize");
   }
-  const cookie = await sign(req.env, `${provider}~${state}~${verifier}`);
+  const cookie = await sign(await signingKey(req.env, req.db), `${provider}~${state}~${verifier}`);
   return new Response(null, {
     status: 302,
     headers: {
@@ -214,7 +261,7 @@ export async function oauthStart(req: Req, provider: Provider): Promise<Response
 export async function oauthCallback(req: Req, provider: Provider): Promise<Response> {
   const q = req.url.searchParams;
   if (q.get("error")) return redirect("/settings", `Sign-in failed: ${q.get("error")}: ${q.get("error_description") ?? ""}`, false);
-  const saved = await unsign(req.env, cookieValue(req.request, OAUTH_COOKIE));
+  const saved = await unsign(await signingKey(req.env, req.db), cookieValue(req.request, OAUTH_COOKIE));
   const [p, state, verifier] = (saved ?? "").split("~");
   if (!saved || p !== provider || state !== q.get("state") || !q.get("code")) return redirect("/settings", "That sign-in answer didn't match this request; try Connect again.", false);
   const cfg = await loadConfig(req.db);

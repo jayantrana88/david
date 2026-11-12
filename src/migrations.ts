@@ -1,8 +1,11 @@
 /** The migration files, bundled as text (wrangler.jsonc `rules`). A new migration is one more import and one more entry. */
 import m0001 from "../migrations/0001_init.sql";
+import m0002 from "../migrations/0002_dashboard_lock.sql";
 import { migrate, type Migration } from "./migrate";
 
-const MIGRATIONS: Migration[] = [{ name: "0001_init.sql", sql: m0001 }];
+const MIGRATIONS: Migration[] = [{ name: "0001_init.sql", sql: m0001 },
+  { name: "0002_dashboard_lock.sql", sql: m0002 },
+];
 
 let done: Promise<void> | null = null;
 

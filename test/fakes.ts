@@ -42,7 +42,7 @@ class FakeStatement {
 export function fakeD1(): D1Database {
   const db = new DatabaseSync(":memory:");
   db.exec("PRAGMA foreign_keys = ON");
-  db.exec(readFileSync(join(__dirname, "..", "migrations", "0001_init.sql"), "utf8"));
+  for (const file of ["0001_init.sql", "0002_dashboard_lock.sql"]) db.exec(readFileSync(join(__dirname, "..", "migrations", file), "utf8"));
   return {
     prepare: (sql: string) => new FakeStatement(db, sql),
     batch: async (statements: FakeStatement[]) => {

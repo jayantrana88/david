@@ -1,6 +1,6 @@
 /** The dashboard's routes. Every page needs the session cookie; every POST must come from this origin. */
 import { Db } from "../db";
-import { clearCookie, MIN_PASSWORD, passwordMatches, passwordOf, sameOrigin, sessionCookie, signedIn } from "./auth";
+import { clearCookie, lockKey, passwordMatches, sameOrigin, sessionCookie, signedIn } from "./auth";
 import { type Req, redirect } from "./common";
 import { bare, html } from "./html";
 import * as pages from "./pages";
@@ -31,6 +31,8 @@ const ROUTES: [method: string, pattern: RegExp, handler: Handler][] = [
   ["GET", /^\/settings$/, settings.settingsPage],
   ["POST", /^\/settings$/, settings.saveSettings],
   ["POST", /^\/settings\/secret$/, settings.saveSecret],
+  ["POST", /^\/settings\/password$/, settings.savePassword],
+  ["POST", /^\/settings\/password\/remove$/, settings.removePassword],
   ["POST", /^\/settings\/test-send$/, settings.testSend],
   ["GET", /^\/oauth\/(gmail|outlook)\/start$/, (req, p) => settings.oauthStart(req, p as "gmail" | "outlook")],
   ["GET", /^\/oauth\/(gmail|outlook)\/callback$/, (req, p) => settings.oauthCallback(req, p as "gmail" | "outlook")],
@@ -45,33 +47,28 @@ ${error ? html`<div class="flash bad">${error}</div>` : ""}
 <p><button class="primary">Sign in</button></p></form>`, status);
 }
 
-function setupPage(): Response {
-  return bare("Set a password", html`<h1>One more step</h1><div class="panel">
-<p>The dashboard is on a public URL, so it needs a password. Set the <code>DASHBOARD_PASSWORD</code> secret (at least ${MIN_PASSWORD} characters):</p>
-<ul><li>Cloudflare dashboard → Workers &amp; Pages → this Worker → Settings → Variables and Secrets → Add → type Secret, or</li>
-<li><code>npx wrangler secret put DASHBOARD_PASSWORD</code> in the project folder.</li></ul>
-<p>Then reload this page.</p></div>`, 503);
-}
-
 export async function handle(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const url = new URL(request.url);
-  if (passwordOf(env).length < MIN_PASSWORD) return setupPage();
+  const db = new Db(env.DB);
+  const key = await lockKey(env, db);
   if (request.method === "POST" && !sameOrigin(request)) return new Response("Cross-origin request refused", { status: 403 });
 
   if (url.pathname === "/login") {
+    if (key === null) return new Response(null, { status: 303, headers: { Location: "/" } });
     if (request.method !== "POST") return loginPage();
     const form = await request.formData();
-    if (!(await passwordMatches(env, String(form.get("password") ?? "")))) return loginPage("Wrong password.", 401);
-    return new Response(null, { status: 303, headers: { Location: "/", "Set-Cookie": await sessionCookie(env) } });
+    if (!(await passwordMatches(env, db, String(form.get("password") ?? "")))) return loginPage("Wrong password.", 401);
+    return new Response(null, { status: 303, headers: { Location: "/", "Set-Cookie": await sessionCookie(key) } });
   }
   if (url.pathname === "/logout" && request.method === "POST") {
-    return new Response(null, { status: 303, headers: { Location: "/login", "Set-Cookie": clearCookie } });
+    return new Response(null, { status: 303, headers: { Location: key === null ? "/" : "/login", "Set-Cookie": clearCookie } });
   }
-  if (!(await signedIn(env, request))) {
+  // No password set: the dashboard is open (Settings → Dashboard password).
+  if (key !== null && !(await signedIn(key, request))) {
     return request.method === "GET" ? new Response(null, { status: 303, headers: { Location: "/login" } }) : new Response("Signed out", { status: 401 });
   }
 
-  const req: Req = { env, db: new Db(env.DB), url, request, ctx };
+  const req: Req = { env, db, url, request, ctx };
   for (const [method, pattern, handler] of ROUTES) {
     if (method !== request.method) continue;
     const m = pattern.exec(url.pathname);

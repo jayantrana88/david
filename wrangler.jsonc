@@ -1,5 +1,5 @@
 // DAVID on Cloudflare (free plan). One Worker:
-//   fetch      the dashboard (password: the DASHBOARD_PASSWORD secret)
+//   fetch      the dashboard (optional password: set on the Settings page)
 //   scheduled  every minute: one "tick" that runs one stage a small step (src/runner.ts)
 // The Deploy to Cloudflare button provisions the D1 database (no database_id here: it is created and filled in for
 // you) and Workers AI. The Worker applies migrations/ to D1 itself, so any deploy command works.

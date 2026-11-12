@@ -1,16 +1,48 @@
 /**
- * The dashboard is on a public URL, so it is always locked: the password is the DASHBOARD_PASSWORD secret
- * (set after the deploy, not asked for by the button). Without it every page says how to set it (fail closed).
- * A session is a cookie `<expiry>.<HMAC(password, expiry)>`: changing the password signs everyone out.
+ * The optional dashboard password. It is set from the Settings page and stored as a salted hash in
+ * `dashboard_lock` (no row = the dashboard is open). The DASHBOARD_PASSWORD secret, when someone sets it, wins and
+ * can't be changed from the page. The "lock key" is what a session is signed with: changing or removing the
+ * password signs everyone out.
+ * A session is a cookie `<expiry>.<HMAC(lock key, expiry)>`.
  * POSTs must come from the dashboard's own origin (CSRF), on top of the SameSite=Lax cookie.
  */
+import type { Db } from "../db";
 import { base64url, base64urlDecode } from "../util";
 
 export const COOKIE = "ja_session";
 const MAX_AGE = 30 * 24 * 3600;
-export const MIN_PASSWORD = 10;
+export const MIN_PASSWORD = 8;
 
 export const passwordOf = (env: Env): string => String((env as unknown as { DASHBOARD_PASSWORD?: string }).DASHBOARD_PASSWORD ?? "");
+
+/** The password from the secret, when someone set one (it can't be changed from the Settings page). */
+export const envPassword = (env: Env): string | null => (passwordOf(env).length >= MIN_PASSWORD ? passwordOf(env) : null);
+
+/** What sessions are signed with, or null when the dashboard is open. */
+export async function lockKey(env: Env, db: Db): Promise<string | null> {
+  const fromEnv = envPassword(env);
+  if (fromEnv) return `env:${fromEnv}`;
+  const row = await db.get<{ password_hash: string }>("SELECT password_hash FROM dashboard_lock WHERE id = 1");
+  return row ? `db:${row.password_hash}` : null;
+}
+
+const hex = (bytes: Uint8Array): string => [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
+
+/** `<salt>:<HMAC-SHA256(salt, password)>`. Cheap on purpose: a free Worker has 10 ms of CPU per request. */
+export async function hashPassword(password: string): Promise<string> {
+  const salt = hex(crypto.getRandomValues(new Uint8Array(16)));
+  return `${salt}:${hex(await hmac(salt, password))}`;
+}
+
+/** The typed password matches the lock (the secret, or the stored hash), in constant time. */
+export async function passwordMatches(env: Env, db: Db, typed: string): Promise<boolean> {
+  const fromEnv = envPassword(env);
+  if (fromEnv) return equal(await hmac("login", typed), await hmac("login", fromEnv));
+  const row = await db.get<{ password_hash: string }>("SELECT password_hash FROM dashboard_lock WHERE id = 1");
+  const [salt, expected] = (row?.password_hash ?? "").split(":");
+  if (!salt || !expected) return false;
+  return equal(await hmac("login", hex(await hmac(salt, typed))), await hmac("login", expected));
+}
 
 async function hmac(key: string, data: string): Promise<Uint8Array> {
   const k = await crypto.subtle.importKey("raw", new TextEncoder().encode(key), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
@@ -32,29 +64,21 @@ export function cookieValue(request: Request, name: string): string | null {
   return null;
 }
 
-/** The password typed matches (compared as HMACs, in constant time). */
-export async function passwordMatches(env: Env, typed: string): Promise<boolean> {
-  const password = passwordOf(env);
-  if (password.length < MIN_PASSWORD) return false;
-  return equal(await hmac("login", typed), await hmac("login", password));
-}
-
-export async function sessionCookie(env: Env): Promise<string> {
+export async function sessionCookie(key: string): Promise<string> {
   const expiry = String(Math.floor(Date.now() / 1000) + MAX_AGE);
-  const sig = base64url(await hmac(passwordOf(env), `session:${expiry}`));
+  const sig = base64url(await hmac(key, `session:${expiry}`));
   return `${COOKIE}=${expiry}.${sig}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${MAX_AGE}`;
 }
 
 export const clearCookie = `${COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`;
 
-export async function signedIn(env: Env, request: Request): Promise<boolean> {
-  const password = passwordOf(env);
+export async function signedIn(key: string, request: Request): Promise<boolean> {
   const value = cookieValue(request, COOKIE);
-  if (password.length < MIN_PASSWORD || !value) return false;
+  if (!value) return false;
   const [expiry, sig] = value.split(".");
   if (!expiry || !sig || Number(expiry) < Date.now() / 1000) return false;
   try {
-    return equal(base64urlDecode(sig), await hmac(password, `session:${expiry}`));
+    return equal(base64urlDecode(sig), await hmac(key, `session:${expiry}`));
   } catch {
     return false;
   }
@@ -69,17 +93,22 @@ export function sameOrigin(request: Request): boolean {
 }
 
 /** Sign a short-lived value (the OAuth state + PKCE verifier cookie). */
-export async function sign(env: Env, value: string): Promise<string> {
-  return `${value}.${base64url(await hmac(passwordOf(env), `signed:${value}`))}`;
+export async function sign(key: string, value: string): Promise<string> {
+  return `${value}.${base64url(await hmac(key, `signed:${value}`))}`;
 }
 
-export async function unsign(env: Env, signed: string | null): Promise<string | null> {
+/** The key for short-lived signed values: the lock key, or a fixed one while the dashboard is open (nobody to impersonate). */
+export async function signingKey(env: Env, db: Db): Promise<string> {
+  return (await lockKey(env, db)) ?? "open";
+}
+
+export async function unsign(key: string, signed: string | null): Promise<string | null> {
   if (!signed) return null;
   const i = signed.lastIndexOf(".");
   if (i < 0) return null;
   const value = signed.slice(0, i);
   try {
-    return equal(base64urlDecode(signed.slice(i + 1)), await hmac(passwordOf(env), `signed:${value}`)) ? value : null;
+    return equal(base64urlDecode(signed.slice(i + 1)), await hmac(key, `signed:${value}`)) ? value : null;
   } catch {
     return null;
   }

@@ -1,7 +1,7 @@
 /**
  * DAVID as one Cloudflare Worker (free plan):
  *
- *   fetch       the dashboard (src/web/), behind the DASHBOARD_PASSWORD secret
+ *   fetch       the dashboard (src/web/), with an optional password (Settings page)
  *   scheduled   the cron trigger, every minute: one tick that runs one stage a small step (src/runner.ts)
  *
  * Storage is one D1 database (migrations/, applied by the Worker itself: src/migrations.ts), the AI is Workers AI through the `AI` binding, and LinkedIn pages

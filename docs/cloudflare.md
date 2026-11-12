@@ -19,7 +19,7 @@ The same pipeline as the local daemon, as one Cloudflare Worker you can deploy w
 ## Deploy
 
 1. **Push this repo to GitHub as a public repo.** The button reads `https://github.com/jayantrana88/david`, and the Worker sits at the repo root (`wrangler.jsonc`, `package.json`, `src/`). If your repo is named differently, change that URL here and in the root README.
-2. **Click Deploy to Cloudflare** and sign in. You'll name the Worker and the D1 database. The deploy doesn't ask for a password: until you set the **`DASHBOARD_PASSWORD`** secret (Worker → Settings → Variables and Secrets, at least 10 random characters, e.g. `openssl rand -base64 18`), the dashboard stays locked and says how to set it. Cloudflare then:
+2. **Click Deploy to Cloudflare** and sign in. You'll name the Worker and the D1 database. The deploy asks for nothing else. The dashboard starts **open**: anyone with the Worker's address can use it, including your API keys and resume. Set a password on its **Settings** page (optional, at least 8 characters; it is stored as a salted hash in D1, and you can change or remove it there). Cloudflare then:
    - copies the repo to your account,
    - creates the D1 database,
    - deploys the Worker with its cron. The Worker creates its own tables in D1 on its first run (`src/migrations.ts`), so the deploy command doesn't matter.
@@ -29,7 +29,7 @@ The same pipeline as the local daemon, as one Cloudflare Worker you can deploy w
 6. **Tasks:** add a kind of company and a place, for example *software company* in *Bengaluru*.
 7. **Applications:** watch the drafts arrive. When they look right, go to Settings and switch the mode to **Send** with your delivery channel.
 
-To deploy from your own machine instead: `npm install`, `npx wrangler login`, then `npx wrangler d1 create david` and put its id in `wrangler.jsonc`. Then run `npx wrangler secret put DASHBOARD_PASSWORD` and `npm run deploy`. (The migrations apply on the Worker's first request; `npm run db:migrations:apply` still works if you prefer to run them yourself.)
+To deploy from your own machine instead: `npm install`, `npx wrangler login`, then `npx wrangler d1 create david` and put its id in `wrangler.jsonc`. Then run `npm run deploy`. (Optionally `npx wrangler secret put DASHBOARD_PASSWORD` locks the dashboard from the start; that password can't be changed from the Settings page.) (The migrations apply on the Worker's first request; `npm run db:migrations:apply` still works if you prefer to run them yourself.)
 
 ### Delivery channels
 
