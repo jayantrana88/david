@@ -1,5 +1,5 @@
 -- schema.sql — every table DAVID needs, in the local SQLite database (data/david.db).
--- Applied automatically, by the daemon (core/sqlite.py) and the dashboard (dashboard/src/lib/db.ts),
+-- Applied automatically, by the daemon (core/sqlite.py) and the dashboard (web/server/db.ts),
 -- each time they open the file: every statement is IF NOT EXISTS / OR IGNORE, so it is safe to re-run.
 -- CREATE TABLE IF NOT EXISTS never changes a table that already exists: a column added or removed later is
 -- also listed in core/sqlite.py (ADDED_COLUMNS / DROPPED_COLUMNS), which brings an older file up to date.

@@ -150,7 +150,8 @@ daemon/                 the local Python daemon
   data/                   david.db and resumes/ (uploaded resumes); git-ignored
   tests/                  pytest suite (no network: a fake AI and a fake Jina)
   test_email.py           manual harness: one company, real APIs, nothing saved or sent
-dashboard/              Next.js web UI over the same SQLite file
+web/                    the React dashboard (Vite); one app for both setups
+  server/               its local server: the app and its API over the same SQLite file
 src/ migrations/ test/  the same pipeline as one Cloudflare Worker (wrangler.jsonc, package.json at the
 wrangler.jsonc ...      repo root; see docs/cloudflare.md)
 ```
@@ -176,7 +177,7 @@ There are two ways to run DAVID. Both use the same stages and the same tables.
 | **Runs** | Around the clock, with no PC to keep on | While `python daemon/main.py` is running |
 | **AI** | Workers AI, with no key needed | Any provider [LiteLLM](https://docs.litellm.ai/docs/providers) supports |
 | **LinkedIn pages** | Plain fetch from Cloudflare (LinkedIn blocks datacenter IPs often; Browser Rendering needs Workers Paid) | Your installed Chrome, from your own connection |
-| **Dashboard** | On a public URL, behind a password | On `127.0.0.1`, with an optional password |
+| **Dashboard** | The same React app, on the Worker's own URL, with an optional password | The same React app, on `127.0.0.1`, with an optional password |
 
 ### On Cloudflare
 
@@ -209,9 +210,8 @@ pip install -r daemon/requirements.txt
 **2. Start the dashboard**
 
 ```powershell
-cd dashboard
 npm install
-npm run dev            # http://127.0.0.1:3000   (or: npm run build && npm start)
+npm run dashboard      # builds the app, then serves it on http://127.0.0.1:3000
 ```
 
 **3. Add your keys** in **Settings**. There is no config file for them. They are saved in the local database, and the daemon restarts itself to use them.
@@ -242,7 +242,7 @@ python daemon/main.py --pools scrape internal  # only some (profile sourcing scr
 > [!IMPORTANT]
 > The keys are stored as plain text in `daemon/data/david.db`. Keep that file, and any backup of it, private.
 
-The only environment variable is the optional `DB_PATH`, the location of the SQLite file (default `daemon/data/david.db`). The daemon and the dashboard both read it; for the dashboard, put it in `dashboard/.env.local`. There is no database setup step: [daemon/db/schema.sql](daemon/db/schema.sql) is applied whenever the file is opened.
+The only environment variable is the optional `DB_PATH`, the location of the SQLite file (default `daemon/data/david.db`). The daemon and the dashboard both read it (`PORT` changes the dashboard's port, 3000 by default). There is no database setup step: [daemon/db/schema.sql](daemon/db/schema.sql) is applied whenever the file is opened.
 
 ### Tasks
 
@@ -261,7 +261,7 @@ insert into tasks (category, location, candidates) values ('software company', '
 
 ## Dashboard
 
-[dashboard/](dashboard/) is a Next.js web app over the same SQLite file. It listens on `127.0.0.1` only, so it is meant for your own machine.
+[web/](web/) is a React app, and [web/server/](web/server/) serves it with its JSON API over the same SQLite file (`npm run dashboard`). It listens on `127.0.0.1` only, so it is meant for your own machine. The Cloudflare Worker serves the very same app and API over D1, so the two look and behave alike.
 
 | Page | What you can do |
 | --- | --- |
@@ -352,7 +352,7 @@ DAVID is provided as is. You are responsible for how you use it and for every em
 
 ## Updating
 
-Pull the new code, then run `pip install -r daemon/requirements.txt`, and `npm install` in `dashboard/`. Restart the daemon. New columns are added to your existing database automatically when it is opened, so your data stays.
+Pull the new code, then run `pip install -r daemon/requirements.txt`, and `npm install` at the repo root. Restart the daemon. New columns are added to your existing database automatically when it is opened, so your data stays.
 
 For the Cloudflare version, see [docs/cloudflare.md](docs/cloudflare.md). `npm run deploy` applies any new migrations to D1.
 

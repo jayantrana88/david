@@ -1,7 +1,7 @@
 /** The optional dashboard password: open until one is set, then a salted hash in D1 (or the DASHBOARD_PASSWORD secret). */
 import { describe, expect, it } from "vitest";
 import { Db } from "../src/db";
-import { hashPassword, lockKey, passwordMatches, sessionCookie, signedIn } from "../src/web/auth";
+import { hashPassword, lockKey, passwordMatches, sessionCookie, signedIn } from "../src/api/auth";
 import { fakeD1 } from "./fakes";
 
 const env = (password?: string) => ({ DASHBOARD_PASSWORD: password }) as unknown as Env;

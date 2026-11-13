@@ -1,6 +1,6 @@
 """
 Settings kept in the local database (app_settings / app_secrets, db/schema.sql), edited from the dashboard
-(dashboard/): the API keys, the AI model, the email settings. They are the only source.
+(the dashboard, web/ + web/server/): the API keys, the AI model, the email settings. They are the only source.
 
 config.py calls `load()` once, at import. It is a plain synchronous SQLite read (core/sqlite.py) because
 config.py is imported synchronously, before any event loop exists, and the clients read their keys at

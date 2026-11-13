@@ -13,7 +13,7 @@ The same pipeline as the local daemon, as one Cloudflare Worker you can deploy w
 | AI | LiteLLM, any provider | Workers AI binding (no key, Gemma 4 by default), or any OpenAI-compatible endpoint |
 | LinkedIn pages | Playwright + your Chrome | Plain fetch (Browser Rendering on Workers Paid) |
 | City gazetteer | geonamescache (bundled) | Open-Meteo geocoding (same GeoNames data), cached in D1 |
-| Dashboard | Next.js on `127.0.0.1` | Server-rendered pages from the same Worker, behind a password |
+| Dashboard | The React app (`web/`) on `127.0.0.1`, served by `npm run dashboard` | The same React app, served by the Worker as static files, over the same JSON API (`src/api/`); the password is optional |
 | Gmail / Outlook sign-in | `python daemon/mail_setup.py connect` | Settings → Connect (web OAuth) |
 
 ## Deploy
@@ -88,13 +88,16 @@ npm test                      # vitest: the ported logic (same cases as the Pyth
                               # against the real migration on SQLite, with a fake AI and stubbed services
 npm run typecheck
 cp .dev.vars.example .dev.vars && npm run db:migrations:local
-npm run dev                   # http://localhost:8787; trigger a tick at /__scheduled?cron=*+*+*+*+*
+npm run dev                   # http://localhost:8787 (builds web/ first); trigger a tick at /__scheduled?cron=*+*+*+*+*
+npm run dev:web               # optional, in a second terminal: the dashboard with hot reload on http://localhost:5173, against `npm run dev`
 ```
+
+The dashboard is a static React app: `npm run build` (run by `wrangler dev` and `wrangler deploy` through `build.command` in `wrangler.jsonc`) writes `web/dist`, which the Worker serves as static assets (free, no CPU). Only `/api/*` and `/oauth/*` run the Worker.
 
 The AI binding runs only against your account (`wrangler dev --remote`). Locally the AI stages hold with "needs to be run remotely".
 
 `src/` mirrors the daemon:
 - `daemon/stages/<stage>.ts` holds each stage; `runner.ts` is `daemon/main.py` plus `daemon/core/worker.py`.
-- `prompts.ts`, `llm.ts`, `jina.ts`, `mail/`, `sourcing/` (geo and LinkedIn) and `web/` (the dashboard) hold the rest.
+- `prompts.ts`, `llm.ts`, `jina.ts`, `mail/`, `sourcing/` (geo and LinkedIn) and `api/` (the dashboard's JSON API) hold the rest. The dashboard itself is `../web/`.
 
 Keep the prompts in `prompts.ts` in step with `../daemon/prompts/templates.py`. `src/sourcing/geo-data.ts` is generated from pycountry by `scripts/make_geo_data.py`.
